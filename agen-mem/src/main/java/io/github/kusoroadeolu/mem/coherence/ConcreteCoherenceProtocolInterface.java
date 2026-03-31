@@ -14,9 +14,10 @@ public class ConcreteCoherenceProtocolInterface implements CoherenceProtocolInte
     @Override
     public Object readRequest(MemoryLocation location) {
         LockedObject object = chip().mainMemory().get(location);
-        if (object.holdRead()){
+        if (object.tryHoldRead()){
             var var = object.getValue();
             this.protocol.forceRead(location);
+            object.releaseRead();
             return var;
         }
 
@@ -27,10 +28,11 @@ public class ConcreteCoherenceProtocolInterface implements CoherenceProtocolInte
     @Override
     public boolean writeRequest(MemoryLocation location, Object valueToBeWritten) {
         LockedObject object = chip().mainMemory().get(location);
-        if (object.holdWrite()){
+        if (object.tryHoldWrite()){
             object.setValue(valueToBeWritten);
             this.protocol.makeWriteVisible(location);
-             return true;
+            object.releaseWrite();
+            return true;
         }
 
         return false;

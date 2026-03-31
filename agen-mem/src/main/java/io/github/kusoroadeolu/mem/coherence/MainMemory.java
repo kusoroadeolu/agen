@@ -14,28 +14,4 @@ public class MainMemory {
     public LockedObject get(MemoryLocation location){
         return memoryLocations.computeIfAbsent(location, _ -> new LockedObject());
     }
-
-
-//    boolean write(MemoryLocation location, Object value){
-//        LockedObject lo = memoryLocations.computeIfAbsent(location, _ -> new LockedObject());
-//        boolean held = lo.holdWrite();
-//        if (held) lo.setObject(value);
-//        return held;
-//    }
-//
-//    Object read(MemoryLocation location){
-//        LockedObject lo = memoryLocations.computeIfAbsent(location, _ -> new LockedObject());
-//        boolean held = lo.holdRead();
-//        if (held) return lo.getObject();
-//        else return NONE;
-//    }
-//
-//    Object readRaw(MemoryLocation location){
-//        LockedObject lo = memoryLocations.get(location);//If we're reading raw, it means we've been forced to reread during a write or read from another cache
-//        boolean held = lo.holdRead();
-//        if (held) return lo.getObject();
-//        else return NONE;
-//    }
-
-
 }

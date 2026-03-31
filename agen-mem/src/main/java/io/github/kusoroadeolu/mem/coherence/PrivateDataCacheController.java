@@ -10,17 +10,17 @@ public class PrivateDataCacheController implements CacheController{
     //Synchronized to enforce the sequential invariant
 
     @Override
-    public synchronized void readFromMainMemory(MemoryLocation location) {
-        cache.readFromMainMemory(location);
+    public synchronized Object readFromMainMemory(MemoryLocation location) {
+       return cache.readFromMainMemory(location);
     }
 
     @Override
-    public synchronized void readRawFromMainMemory(MemoryLocation location) {
-        cache.readRawFromMainMemory(location);
+    public synchronized Object readRawFromMainMemory(MemoryLocation location) {
+        return cache.readRawFromMainMemory(location);
     }
 
     @Override
-    public synchronized void writeToMainMemory(MemoryLocation location, Object value) {
-        cache.writeToMainMemory(location, value);
+    public synchronized boolean writeToMainMemory(MemoryLocation location, Object value) {
+        return cache.writeToMainMemory(location, value);
     }
 }

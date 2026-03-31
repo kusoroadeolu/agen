@@ -18,23 +18,26 @@ public class PrivateDataCache implements Cache{
     }
 
     @Override
-    public void readFromMainMemory(MemoryLocation location) {
+    public Object readFromMainMemory(MemoryLocation location) {
         var object = MultiProcessorChip.chip().cpInterface().readRequest(location);
         if (object != NONE){ //If we were actually able to read the value
             cacheMap.put(location, object);
         }
+
+        return object;
     }
 
     //Basically during a readwrite epoch, we can read raw from main memory
     @Override
-    public void readRawFromMainMemory(MemoryLocation location) {
+    public Object readRawFromMainMemory(MemoryLocation location) {
         LockedObject object = chip().mainMemory().get(location);
         cacheMap.put(location, object);
+        return object;
     }
 
     @Override
-    public void writeToMainMemory(MemoryLocation location, Object value) {
-        MultiProcessorChip.chip().cpInterface().writeRequest(location, value);
+    public boolean writeToMainMemory(MemoryLocation location, Object value) {
+        return MultiProcessorChip.chip().cpInterface().writeRequest(location, value);
     }
 
     @Override

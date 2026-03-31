@@ -8,6 +8,7 @@ public class MultiProcessorChip {
     private final Map<UUID, Core> cores;
     private final MainMemory memory;
     private final CoherenceProtocolInterface coherenceProtocolInterface;
+    private final Random random;
 
     public MultiProcessorChip() {
         this.memory = new MainMemory();
@@ -18,6 +19,31 @@ public class MultiProcessorChip {
 
         this.coherenceProtocolInterface = new ConcreteCoherenceProtocolInterface();
         this.cores = Collections.unmodifiableMap(map);
+        this.random = new Random();
+    }
+
+    boolean write(MemoryLocation location, Object object){
+        int coreNo = random.nextInt(CORE_COUNT);
+        int current = 0;
+        boolean written = false;
+        for (Core core : cores.values()){
+            if (current++ ==  coreNo) written = core.controller().writeToMainMemory(location, object);
+        }
+
+        return written;
+    }
+
+    Object read(MemoryLocation location){
+        int coreNo = random.nextInt(CORE_COUNT);
+        int current = 0;
+        Object o = null;
+        for (Core core : cores.values()){
+            if (current++ ==  coreNo) {
+                o = core.controller().readFromMainMemory(location);
+            }
+        }
+
+        return o;
     }
 
     public MainMemory mainMemory(){

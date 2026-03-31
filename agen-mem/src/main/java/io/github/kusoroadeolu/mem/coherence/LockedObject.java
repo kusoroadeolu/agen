@@ -2,7 +2,6 @@ package io.github.kusoroadeolu.mem.coherence;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -18,7 +17,7 @@ public class LockedObject{
             this.epochMap = new HashMap<>();
         }
 
-        boolean holdWrite(){
+        boolean tryHoldWrite(){
            boolean held = status.writeLock().tryLock();
            if (held) {
                epoch = Epoch.RW_EPOCH;
@@ -28,7 +27,7 @@ public class LockedObject{
            return held;
         }
 
-        boolean holdRead(){
+        boolean tryHoldRead(){
             boolean held = status.readLock().tryLock();
             if (epoch != Epoch.RO_EPOCH) ++currentEpoch; //If we were not already in a read epoch
 

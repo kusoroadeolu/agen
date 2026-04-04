@@ -2,11 +2,11 @@ package io.github.kusoroadeolu.mem.coherence;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class LockedObject{
-        private final ReadWriteLock status;
+        private final ReentrantReadWriteLock status;
         private volatile Object object;
         private volatile Epoch epoch;
         private int currentEpoch;
@@ -17,29 +17,34 @@ public class LockedObject{
             this.epochMap = new HashMap<>();
         }
 
-        boolean tryHoldWrite(){
+       public boolean tryHoldWrite(){
+           //SWMR Invariant is held by the serializability guarantees, that only on thread can hold this write lock at any time, of the write lock
            boolean held = status.writeLock().tryLock();
            if (held) {
                epoch = Epoch.RW_EPOCH;
-               ++currentEpoch;
+               var bundle = new EpochBundle(Epoch.RW_EPOCH, new AtomicInteger(0));
+               epochMap.put(++currentEpoch, bundle);
            }
-
            return held;
         }
 
         boolean tryHoldRead(){
             boolean held = status.readLock().tryLock();
-            if (epoch != Epoch.RO_EPOCH) ++currentEpoch; //If we were not already in a read epoch
 
             if (held) {
+                if (epoch != Epoch.RO_EPOCH) ++currentEpoch; //If we were not already in a read epoch
                 epoch = Epoch.RO_EPOCH;
-                epochMap.putIfAbsent(currentEpoch, new EpochBundle(epoch, object)); //Doesn't matter how many times we put this honestly
+                epochMap.putIfAbsent(currentEpoch, new EpochBundle(epoch, object, new AtomicInteger(0))); //Doesn't matter how many times we put this honestly
             }
 
             return held;
         }
 
-        void releaseWrite(){
+        public void holdWrite(){
+            status.writeLock().lock();
+        }
+
+       public void releaseWrite(){
             status.writeLock().unlock();
         }
 
@@ -49,13 +54,39 @@ public class LockedObject{
 
         //Should only be written to if READ_WRITE is held
         void setValue(Object value){
-            this.epochMap.put(currentEpoch, new EpochBundle(epoch, value));
             this.object = value;
         }
 
-        Object getValue(){
+       public Object getCurrentValue(){
+            if (epoch == Epoch.RO_EPOCH) epochMap.get(currentEpoch).count.incrementAndGet();
            return this.object;
         }
 
-        record EpochBundle(Epoch epoch, Object value){}
-    }
+       public Map<Integer, EpochBundle> epochMap(){
+            return this.epochMap;
+        }
+
+    public static class EpochBundle {
+        private final Epoch epoch;
+        private Object value;
+        private final AtomicInteger count;
+
+        EpochBundle(Epoch epoch, AtomicInteger count) {
+            this.epoch = epoch;
+            this.count = count;
+        }
+
+        EpochBundle(Epoch epoch, Object o ,AtomicInteger count) {
+            this.epoch = epoch;
+            this.count = count;
+            this.value = o;
+        }
+
+        public void setValue(Object value) {
+            this.value = value;
+        }
+
+        public Epoch epoch() { return epoch; }
+        public Object value() { return value; }
+        public AtomicInteger count() { return count; }
+    }    }

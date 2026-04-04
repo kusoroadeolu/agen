@@ -9,14 +9,13 @@
     <version>1.0.0</version>
     <packaging>pom</packaging>
     <modules>
-        <module>agen-ds</module>
+        <module>agen-stress</module>
         <module>agen-mem</module>
         <module>agen-ven</module>
     </modules>
 
     <properties>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>

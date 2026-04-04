@@ -7,7 +7,7 @@ public class Core {
         this.pdc = new PrivateDataCache();
     }
 
-    public CacheController controller() {
+    public CacheController cacheController() {
         return pdc.controller();
     }
 }

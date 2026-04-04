@@ -23,14 +23,14 @@ public class PrivateDataCache implements Cache{
         if (object != NONE){ //If we were actually able to read the value
             cacheMap.put(location, object);
         }
-
         return object;
     }
 
-    //Basically during a readwrite epoch, we can read raw from main memory
+
+    //Basically during an epoch, we can read raw from main memory
     @Override
     public Object readRawFromMainMemory(MemoryLocation location) {
-        LockedObject object = chip().mainMemory().get(location);
+        Object object = chip().mainMemory().get(location).getCurrentValue();
         cacheMap.put(location, object);
         return object;
     }

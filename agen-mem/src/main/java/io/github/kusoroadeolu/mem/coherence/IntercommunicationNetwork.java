@@ -7,7 +7,6 @@ public class IntercommunicationNetwork {
 
     }
 
-
     public static Core getCore(UUID coreId){
         return MultiProcessorChip.chip().cores().get(coreId);
     }

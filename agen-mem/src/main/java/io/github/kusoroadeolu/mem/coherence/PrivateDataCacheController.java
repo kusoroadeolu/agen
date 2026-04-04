@@ -1,9 +1,9 @@
 package io.github.kusoroadeolu.mem.coherence;
 
 public class PrivateDataCacheController implements CacheController{
-    private final Cache cache;
+    private final PrivateDataCache cache;
 
-    public PrivateDataCacheController(Cache cache){
+    public PrivateDataCacheController(PrivateDataCache cache){
         this.cache = cache;
     }
 
@@ -15,8 +15,8 @@ public class PrivateDataCacheController implements CacheController{
     }
 
     @Override
-    public synchronized Object readRawFromMainMemory(MemoryLocation location) {
-        return cache.readRawFromMainMemory(location);
+    public synchronized void readRawFromMainMemory(MemoryLocation location) {
+        cache.readRawFromMainMemory(location);
     }
 
     @Override

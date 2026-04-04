@@ -4,7 +4,7 @@ package io.github.kusoroadeolu.mem.coherence;
 public interface CacheController {
     Object readFromMainMemory(MemoryLocation location);
 
-    Object readRawFromMainMemory(MemoryLocation location);
+    void readRawFromMainMemory(MemoryLocation location);
 
     boolean writeToMainMemory(MemoryLocation location, Object value);
 }

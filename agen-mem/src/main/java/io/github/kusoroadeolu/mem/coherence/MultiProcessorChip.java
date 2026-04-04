@@ -1,6 +1,7 @@
 package io.github.kusoroadeolu.mem.coherence;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class MultiProcessorChip {
     private final static int CORE_COUNT = Runtime.getRuntime().availableProcessors();
@@ -8,7 +9,6 @@ public class MultiProcessorChip {
     private final Map<UUID, Core> cores;
     private final MainMemory memory;
     private final CoherenceProtocolInterface coherenceProtocolInterface;
-    private final Random random;
 
     public MultiProcessorChip() {
         this.memory = new MainMemory();
@@ -19,27 +19,28 @@ public class MultiProcessorChip {
 
         this.coherenceProtocolInterface = new ConcreteCoherenceProtocolInterface();
         this.cores = Collections.unmodifiableMap(map);
-        this.random = new Random();
     }
 
-    boolean write(MemoryLocation location, Object object){
-        int coreNo = random.nextInt(CORE_COUNT);
+    public boolean write(MemoryLocation location, Object object){
+        int coreNo = ThreadLocalRandom.current().nextInt(CORE_COUNT);
         int current = 0;
         boolean written = false;
         for (Core core : cores.values()){
-            if (current++ ==  coreNo) written = core.controller().writeToMainMemory(location, object);
+            if (current++ ==  coreNo) {
+                written = core.cacheController().writeToMainMemory(location, object);
+            }
         }
 
         return written;
     }
 
-    Object read(MemoryLocation location){
-        int coreNo = random.nextInt(CORE_COUNT);
+    public Object read(MemoryLocation location){
+        int coreNo = ThreadLocalRandom.current().nextInt(CORE_COUNT);
         int current = 0;
         Object o = null;
         for (Core core : cores.values()){
             if (current++ ==  coreNo) {
-                o = core.controller().readFromMainMemory(location);
+                o = core.cacheController().readFromMainMemory(location);
             }
         }
 

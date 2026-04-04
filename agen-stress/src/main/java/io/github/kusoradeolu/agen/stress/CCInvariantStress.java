@@ -24,7 +24,6 @@ public class CCInvariantStress {
     @State
     public static class SWMRInvariant{
         private final MemoryLocation memoryLocation;
-        Path path = Path.of(".", "file.txt").toAbsolutePath();
 
         public SWMRInvariant() {
             this.memoryLocation = new MemoryLocation();
@@ -64,37 +63,76 @@ public class CCInvariantStress {
 
 
             res.r1 = -1;
-            write("Didnt arbiter results");
         }
 
-        void write(String s){
-            try {
-                Files.writeString(path, s);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
 
 
     @JCStressTest
-    @Outcome(id = "1", expect = Expect.ACCEPTABLE, desc = "invariant maintained")
-    @Outcome(id = "0", expect = Expect.FORBIDDEN, desc = "invariant violated")
+    @Outcome(id = "1", expect = Expect.ACCEPTABLE, desc = "DV invariant maintained")
+    @Outcome(id = "0", expect = Expect.FORBIDDEN, desc = "DV invariant violated")
     @State
-    public static class FinalFieldVisibility{
+    public static class DataValueInvariant{
+        private final MemoryLocation memoryLocation;
 
 
-        @Actor
-        public void writer(I_Result result){
-            result.r1 = new Field().i; //Should always be 1
+        public DataValueInvariant() {
+            this.memoryLocation = new MemoryLocation();
         }
 
-        static class Field{
-            final int i;
+        @Actor
+        public void writer(){
+            MultiProcessorChip.chip().write(memoryLocation, System.currentTimeMillis());
+        }
 
-            public Field() {
-                this.i = 1;
+        @Actor
+        public void reader(){
+            MultiProcessorChip.chip().read(memoryLocation);
+        }
+
+        @Arbiter
+        //Checks state
+        public void arbiter(I_Result res){
+            var lo = MultiProcessorChip.chip().mainMemory().get(memoryLocation);
+                try {
+                    lo.holdWrite();
+                    Long lastRWValue = -1L;
+                    Map<Integer, EpochBundle> map = lo.epochMap();
+                    for (Map.Entry<Integer, EpochBundle> entry : map.entrySet()){
+                        var value = entry.getValue();
+                        if (value.epoch() == Epoch.RW_EPOCH){
+                            lastRWValue = (Long) value.value();
+                            return;
+                        }else if (value.epoch() == Epoch.RO_EPOCH) {
+                            if (lastRWValue != value.value()) res.r1 = 0;
+                        }
+                    }
+                    res.r1 = 1;
+                }finally {
+                    lo.releaseWrite();
+                }
+
+        }
+
+        @JCStressTest
+        @Outcome(id = "1", expect = Expect.ACCEPTABLE, desc = "invariant maintained")
+        @Outcome(id = "0", expect = Expect.FORBIDDEN, desc = "invariant violated")
+        @State
+        public static class FinalFieldVisibility{
+
+
+            @Actor
+            public void writer(I_Result result){
+                result.r1 = new Field().i; //Should always be 1
+            }
+
+            static class Field{
+                final int i;
+
+                public Field() {
+                    this.i = 1;
+                }
             }
         }
     }

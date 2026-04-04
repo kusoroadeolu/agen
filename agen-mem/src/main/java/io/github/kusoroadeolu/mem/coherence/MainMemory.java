@@ -5,8 +5,6 @@ import java.util.concurrent.ConcurrentMap;
 
 public class MainMemory {
     private final ConcurrentMap<MemoryLocation, LockedObject> memoryLocations;
-    private static final Object NONE = new Object(); //Write lock is held
-
     public MainMemory() {
         this.memoryLocations = new ConcurrentHashMap<>();
     }

@@ -5,7 +5,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class MultiProcessorChip {
     private final static int CORE_COUNT = Runtime.getRuntime().availableProcessors();
-    private final static MultiProcessorChip CHIP = new MultiProcessorChip();
     private final Map<UUID, Core> cores;
     private final MainMemory memory;
     private final CoherenceProtocolInterface coherenceProtocolInterface;
@@ -60,12 +59,16 @@ public class MultiProcessorChip {
     }
 
     public static MultiProcessorChip chip(){
-        return CHIP;
+        return ChipHolder.CHIP;
     }
 
 
     public CoherenceProtocolInterface cpInterface(){
         return coherenceProtocolInterface;
+    }
+
+    private static final class ChipHolder {
+        static final MultiProcessorChip CHIP = new MultiProcessorChip();
     }
 
 }

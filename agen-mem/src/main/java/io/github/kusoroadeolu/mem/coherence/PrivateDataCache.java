@@ -3,45 +3,18 @@ package io.github.kusoroadeolu.mem.coherence;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.github.kusoroadeolu.mem.coherence.ConcreteCoherenceProtocolInterface.NONE;
-import static io.github.kusoroadeolu.mem.coherence.MultiProcessorChip.chip;
-
-
-//A sequential cache
-public class PrivateDataCache implements Cache{
-    private final Map<MemoryLocation, Object> cacheMap;
-    private final PrivateDataCacheController controller;
+public class PrivateDataCache {
+    private final Map<MemoryLocation, Object> cache;
 
     public PrivateDataCache() {
-        this.cacheMap = new HashMap<>();
-        this.controller = new PrivateDataCacheController(this);
+        this.cache = new HashMap<>();
     }
 
-    @Override
-    public Object readFromMainMemory(MemoryLocation location) {
-        var object = MultiProcessorChip.chip().cpInterface().readRequest(location);
-        if (object != NONE){ //If we were actually able to read the value
-            cacheMap.put(location, object);
-        }
-        return object;
+    public void write(MemoryLocation location, Object o){
+        cache.put(location, o);
     }
 
-
-    //Basically during an epoch, we can read raw from main memory
-    @Override
-    public Object readRawFromMainMemory(MemoryLocation location) {
-        Object object = chip().mainMemory().get(location).getCurrentValue();
-        cacheMap.put(location, object);
-        return object;
-    }
-
-    @Override
-    public boolean writeToMainMemory(MemoryLocation location, Object value) {
-        return MultiProcessorChip.chip().cpInterface().writeRequest(location, value);
-    }
-
-    @Override
-    public CacheController controller() {
-        return controller;
+    public Object get(MemoryLocation location){
+        return cache.get(location);
     }
 }

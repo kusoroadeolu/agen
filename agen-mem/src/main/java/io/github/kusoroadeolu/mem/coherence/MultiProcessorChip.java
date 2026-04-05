@@ -1,74 +1,70 @@
 package io.github.kusoroadeolu.mem.coherence;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class MultiProcessorChip {
-    private final static int CORE_COUNT = Runtime.getRuntime().availableProcessors();
-    private final Map<UUID, Core> cores;
     private final MainMemory memory;
-    private final CoherenceProtocolInterface coherenceProtocolInterface;
+    private final InterConnectionNetwork network;
+    private final CacheCoherenceProtocol protocol;
+    private final List<Core> cores;
+    private static final int CORE_COUNT = Runtime.getRuntime().availableProcessors();
 
     public MultiProcessorChip() {
         this.memory = new MainMemory();
-        var map = new HashMap<UUID, Core>();
+        this.cores = createCores();
+        this.network = InterConnectionNetwork.getInstance();
+        protocol = new CA_CoherenceProtocol();
+
+    }
+
+    private List<Core> createCores() {
+        var list = new ArrayList<Core>();
         for (int i = 0; i < CORE_COUNT; ++i){
-            map.put(UUID.randomUUID(), new Core());
+            list.add(i, new Core(CoreId.of(i)));
         }
-
-        this.coherenceProtocolInterface = new ConcreteCoherenceProtocolInterface();
-        this.cores = Collections.unmodifiableMap(map);
+        return Collections.unmodifiableList(list);
     }
 
-    public boolean write(MemoryLocation location, Object object){
-        int coreNo = ThreadLocalRandom.current().nextInt(CORE_COUNT);
-        int current = 0;
-        boolean written = false;
-        for (Core core : cores.values()){
-            if (current++ ==  coreNo) {
-                written = core.cacheController().writeToMainMemory(location, object);
-            }
-        }
 
-        return written;
+    public boolean store(MemoryLocation location, Object o){
+        int random = ThreadLocalRandom.current().nextInt(CORE_COUNT);
+        return cores.stream()
+                .filter(c -> c.coreId().id() == random)
+                .toList()
+                .getFirst()
+                .store(location, o);
     }
 
-    public Object read(MemoryLocation location){
-        int coreNo = ThreadLocalRandom.current().nextInt(CORE_COUNT);
-        int current = 0;
-        Object o = null;
-        for (Core core : cores.values()){
-            if (current++ ==  coreNo) {
-                o = core.cacheController().readFromMainMemory(location);
-            }
-        }
-
-        return o;
-    }
-
-    public MainMemory mainMemory(){
-        return memory;
-    }
-
-    public Set<UUID> coreIds(){
-        return cores.keySet();
-    }
-
-    public Map<UUID, Core> cores(){
-        return cores;
+    public Object load(MemoryLocation location){
+        int random = ThreadLocalRandom.current().nextInt(CORE_COUNT);
+        return cores.stream()
+                .filter(c -> c.coreId().id() == random)
+                .toList()
+                .getFirst()
+                .load(location);
     }
 
     public static MultiProcessorChip chip(){
         return ChipHolder.CHIP;
     }
 
-
-    public CoherenceProtocolInterface cpInterface(){
-        return coherenceProtocolInterface;
+    public List<Core> cores(){
+        return cores;
     }
 
-    private static final class ChipHolder {
-        static final MultiProcessorChip CHIP = new MultiProcessorChip();
+    public MainMemory memory(){
+        return memory;
     }
 
+    public CacheCoherenceProtocol protocol() {
+        return protocol;
+    }
+
+
+    private static class ChipHolder{
+        private final static MultiProcessorChip CHIP = new MultiProcessorChip();
+    }
 }

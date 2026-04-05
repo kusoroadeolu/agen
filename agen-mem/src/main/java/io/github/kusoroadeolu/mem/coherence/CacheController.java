@@ -22,7 +22,7 @@ public class CacheController {
            while (true){
                AckMessage ackMessage;
                if ((ackMessage = InterConnectionNetwork.getInstance().peek()) != null){
-                    var object = InterConnectionNetwork.getInstance().readFromMainMemory(ackMessage.location());
+                    var object = InterConnectionNetwork.getInstance().readFromMainMemory();
                     cache.write(ackMessage.location(), object);
                     ackMessage.acknowledge();
                }

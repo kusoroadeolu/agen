@@ -25,8 +25,8 @@ public class InterConnectionNetwork {
         return bus.offer(ackMessage);
     }
 
-    public Object readFromMainMemory(){
-        return MultiProcessorChip.chip().memory();
+    public Object readFromMainMemory(MemoryLocation location){
+        return MultiProcessorChip.chip().memory().read(location);
     }
 
 

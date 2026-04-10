@@ -12,6 +12,8 @@
         <module>agen-stress</module>
         <module>agen-mem</module>
         <module>agen-ven</module>
+        <module>agen-expr</module>
+        <module>agen-jmh</module>
     </modules>
 
     <properties>

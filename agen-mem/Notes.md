@@ -54,9 +54,9 @@ Coherence definitions through invariants. Two invariants exist to ensure correct
    Subsequently, a memory location's lifetime could be divided into epochs. An epoch's lifetime can be marked/ended as a different operation from the current operation of the current epoch. Basically in each epoch, a core has read/write access or multiple cores have read only access
 
 
-| Epoch 1                            | Epoch 2                      | Epoch 3                      | Epoch 3                            |
-|------------------------------------|------------------------------|------------------------------|------------------------------------|
-| Core A and B (Read only operation) | Core C(Read/Write operation) | Core A(Read/Write operation) | Core B and E (Read only operation) |
+| Epoch 1                            | Epoch 2                       | Epoch 3                       | Epoch 3                            |
+|------------------------------------|-------------------------------|-------------------------------|------------------------------------|
+| Core A and B (Read only operation) | Core C (Read/Write operation) | Core A (Read/Write operation) | Core B and E (Read only operation) |
 
 Basically when defining cache coherence, these invariants must be taken into account for an accurate definition
 
@@ -68,8 +68,40 @@ To maintain these invariants:
 
 **NOTE:** For coherence, loads and stores are mostly performed at the cache block granularity.
 
+Since consistency agnostic coherence is performed at the granularity of the cache block. So to enforce the SWMR invariant of consistency agnostic coherence, a core cannot write to the beginning of a cache block while another is writing at the end of a cache block. So going back to what you said about caches needing to fetch the cache line first. If a core is writing to a cache block, and another core wants to write independent data to that cache block, to enforce the SWMR invariant of coherence, if a cache is writing to that cache block, the core has to get another cache block from main memory hence a cache miss(which is slower). In concurrent code, this is what we know as false sharing, which could lead to performance drops
+
+
 ### Definitions for less important concepts
 - **Write-back cache**: data is written to cache only; main memory is updated when the cache line is evicted/flushed. (Faster, but more complex)
 - **Write-through cache**: data is written to both cache and main memory immediately. (Simpler, but slower)
 - **Memory controller:** manages the flow of data between the CPU and main memory(RAM)
 - **Atomic Memory System:** allows memory (read-modify-write) operations to happen as a single indivisible unit(atomic)
+
+# Chapter 3
+## Memory Consistency
+### Problems of shared memory
+A core may reorder memory accesses, leading to incorrect execution of operations in another core 
+
+Given a program of original ordering. Ideally programmers may expect the flag store from Core A to always occur before the data store, but this may not always be true
+
+| Core A                                         | Core B                                                                             |
+|------------------------------------------------|------------------------------------------------------------------------------------|
+| S1: store data = NEW<br/> S2: store flag = SET | <br/> L1: load r1 = flag <br/> if (r1 != SET) L3: goto r1 <br/> L2: load r2 = data |
+
+**Possible Reorderings**
+Given two store memory accesses to flag and data by Core A and two load access to flag and data by Core B
+
+| Core A               | Core B             | Flag Coherence State | Data Coherence State | 
+|----------------------|--------------------|----------------------|----------------------|
+| S2: store flag = SET |                    | Core A RW Epoch      | Core B RO Epoch      |
+|                      | L1: load r1 = flag | Core B RO Epoch      | Core B RO Epoch      |
+|                      | L2: load r2 = data | Core B RO Epoch      | Core B RO Epoch      |
+| S2: store data = NEW |                    | Core A RW Epoch      | CORE B RO Epoch      |
+
+
+#### Causes of reordering in code
+1. Reordering of execution: A core executes instructions out of order as long those instructions are independent of each other
+    - Load-Load reordering: Modern cores may execute reads out of order (in whatever sequence is fastest)
+2. Reordering of memory visibility: A core might execute instructions in order, but they might be flushed from the write buffer/hit main memory out of order 
+   - Store-Store ordering - Stores maybe be executed in order but depart from the write buffer out of order
+   - Load-Store ordering - Stores or loads maybe be executed out of order due to hitting main memory out of order or reordering of instructions by the core

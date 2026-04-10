@@ -47,61 +47,26 @@ public class MainMemory{
     public static class EpochObject {
         private volatile Object object;
         private volatile Epoch epoch;
-        private int currentEpoch;
-        private final Map<Integer, EpochBundle> epochMap; //Epoch to object, just to keep track of our invariants
-
-        public EpochObject() {
-            this.epochMap = new HashMap<>();
-        }
 
         public void toRWEpoch(){
-            //SWMR Invariant is held by the serializability guarantees, that only on thread can hold this write lock at any time, of the write lock
             epoch = Epoch.RW_EPOCH;
-            var bundle = new EpochBundle(Epoch.RW_EPOCH, new AtomicInteger(1));
-            epochMap.put(++currentEpoch, bundle);
         }
 
         public void toROEpoch(){
-            if (epoch == Epoch.RO_EPOCH) return;
-            //SWMR Invariant is held by the serializability guarantees, that only on thread can hold this write lock at any time, of the write lock
             epoch = Epoch.RO_EPOCH;
-            var bundle = new EpochBundle(Epoch.RW_EPOCH, new AtomicInteger(0));
-            epochMap.put(++currentEpoch, bundle);
         }
 
+        public Epoch epoch(){
+            return epoch;
+        }
 
         //Should only be written to if READ_WRITE is held
         void setValue(Object value){
             this.object = value;
-            epochMap.get(currentEpoch).setValue(value);
         }
 
         public Object getCurrentValue(){
-            if (epoch == Epoch.RO_EPOCH) epochMap.get(currentEpoch).count.incrementAndGet();
             return this.object;
-        }
-
-        public Map<Integer, EpochBundle> epochMap(){
-            return this.epochMap;
-        }
-
-        public static class EpochBundle {
-            private final Epoch epoch;
-            private Object value;
-            private final AtomicInteger count;
-
-            EpochBundle(Epoch epoch, AtomicInteger count) {
-                this.epoch = epoch;
-                this.count = count;
-            }
-
-            public void setValue(Object value) {
-                this.value = value;
-            }
-
-            public Epoch epoch() { return epoch; }
-            public Object value() { return value; }
-            public AtomicInteger count() { return count; }
         }
     }
 }

@@ -1,7 +1,5 @@
 package io.github.kusoroadeolu.mem.coherence;
 
-import java.util.concurrent.SynchronousQueue;
-
 public class InterConnectionNetwork {
     private final Bus<AckMessage> bus;
 

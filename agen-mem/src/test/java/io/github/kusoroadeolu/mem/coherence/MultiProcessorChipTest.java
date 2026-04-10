@@ -12,14 +12,15 @@ class MultiProcessorChipTest {
     void onWrite_mainMemory_shouldContainWrittenObject(){
         var currentTime = System.currentTimeMillis();
         var memLocation = new MemoryLocation();
-        MultiProcessorChip.chip().write(memLocation, currentTime);
-        assertEquals(currentTime, MultiProcessorChip.chip().mainMemory().get(memLocation).getCurrentValue());
+        var stored = MultiProcessorChip.chip().store(memLocation, currentTime);
+        assertTrue(stored);
+        assertEquals(currentTime, MultiProcessorChip.chip().memory().get(memLocation).getCurrentValue());
     }
 
     @Test
     void onRead_mainMemory_shouldNotContainWrittenObject(){
         var memLocation = new MemoryLocation();
-        var value = MultiProcessorChip.chip().read(memLocation);
+        var value = MultiProcessorChip.chip().load(memLocation);
         assertNull(value);
     }
 
@@ -33,13 +34,13 @@ class MultiProcessorChipTest {
 
         Thread.startVirtualThread(() -> {
             awaitLatch(wait);
-            MultiProcessorChip.chip().write(memLocation, currentTime);
+            MultiProcessorChip.chip().store(memLocation, currentTime);
             advance.countDown();
         });
 
         Thread.startVirtualThread(() -> {
             awaitLatch(wait);
-            MultiProcessorChip.chip().read(memLocation);
+            MultiProcessorChip.chip().load(memLocation);
             advance.countDown();
         });
 

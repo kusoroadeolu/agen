@@ -154,7 +154,9 @@ public class SequencerFlatCombiner<E> {
     public Void combine(Consumer<E> consumer){
         var action = new Action<>(consumer);
         long ticket = ticketSeq.nextSequence();
-        int maxSpinCount = 100;
+        int maxSpinCount = 1000000;
+
+
 
         outer:  while (!action.isApplied()){
             //If our current ticket == ticketSeq.nextSeq, meaning we're next in line for our consumer to be applied
@@ -175,19 +177,21 @@ public class SequencerFlatCombiner<E> {
                     local.apply(e);
                     combineCount++;
                 }
+                System.out.println("Combine count: " + combineCount);
+
                 lock.release();
                 return null;
             }
-
-            int count = 0;
-            while (count++ < maxSpinCount && !action.isApplied()){
-                if (pubSeq.currentSeq() == ticket){
-                    pubAction.set(action);
-                    if (!lock.isHeld()) continue outer;
-                }
-
-            }
        }
+
+        int count = 0;
+        while (count++ < maxSpinCount && !action.isApplied()){
+            if (pubSeq.currentSeq() == ticket){
+                pubAction.set(action);
+            }
+            if (!lock.isHeld()) break;
+
+        }
 
         return null;
     }

@@ -1,4 +1,4 @@
-package io.github.kusoroadeolu;
+package io.github.kusoroadeolu.agen.jmh;
 
 import io.github.kusoradeolu.agen.expr.counters.ApproximateCounter;
 import io.github.kusoradeolu.agen.expr.counters.DiminishedSynchronizedCounter;

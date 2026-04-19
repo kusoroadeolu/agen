@@ -1,4 +1,4 @@
-package io.github.kusoroadeolu;
+package io.github.kusoroadeolu.agen.jmh;
 
 import io.github.kusoradeolu.agen.expr.fc.SequencerFlatCombiner;
 import org.openjdk.jmh.annotations.*;

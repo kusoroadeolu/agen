@@ -1,5 +1,6 @@
 package io.github.kusoradeolu.agen.expr;
 
+import io.github.kusoradeolu.agen.expr.queues.MPMCQueue;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

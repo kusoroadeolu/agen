@@ -1,6 +1,6 @@
 package io.github.kusoradeolu.agen.stress;
 
-import io.github.kusoradeolu.agen.expr.MPMCQueue;
+import io.github.kusoradeolu.agen.expr.queues.MPMCQueue;
 import org.openjdk.jcstress.annotations.*;
 import org.openjdk.jcstress.infra.results.I_Result;
 
@@ -50,4 +50,33 @@ public class MPMCQueueStress {
             r.r1 = (queue.contains(2) && queue.contains(3)) ? 1 : 0;
         }
     }
+
+    @JCStressTest
+    @Outcome(id = "1", expect = Expect.ACCEPTABLE)
+    @Outcome(id = "0", expect = Expect.FORBIDDEN, desc = "Chain broken")
+    @State
+    public static class AddRemovePollChainTest {
+        private final MPMCQueue queue = new MPMCQueue();
+        {
+            queue.add(1);
+            queue.add(2);
+        }
+
+        @Actor public void remover() {
+            queue.remove(1);
+        }
+
+        @Actor public void poller() {
+            queue.poll();
+        }
+
+        @Actor public void adder()   {
+            queue.add(3);
+        }
+
+        @Arbiter public void arbiter(I_Result r) {
+            r.r1 = queue.canReachTail() ? 1 : 0;
+        }
+    }
+
 }

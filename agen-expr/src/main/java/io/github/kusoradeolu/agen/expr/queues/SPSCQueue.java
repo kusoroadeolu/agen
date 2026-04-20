@@ -73,7 +73,7 @@ class SPSCQueuePadPad extends SPSCQueuePad {
 
 public class SPSCQueue<T> extends SPSCQueuePadPad implements Queue<T> {
     private final T[] items;
-    protected final int capacity;
+    private final int capacity;
 
     private static final VarHandle ITEMS;
 
@@ -83,9 +83,10 @@ public class SPSCQueue<T> extends SPSCQueuePadPad implements Queue<T> {
 
     @SuppressWarnings("unchecked")
     public SPSCQueue(int capacity) {
-        this.capacity = 1 << (32 - Integer.numberOfLeadingZeros(capacity - 1));
-        super(capacity - 1);
-        this.items = (T[]) new Object[capacity];
+        int toPowTwo = 1 << (32 - Integer.numberOfLeadingZeros(capacity - 1));
+        this.capacity = toPowTwo;
+        super(toPowTwo - 1);
+        this.items = (T[]) new Object[toPowTwo];
     }
 
     public boolean add(T item){

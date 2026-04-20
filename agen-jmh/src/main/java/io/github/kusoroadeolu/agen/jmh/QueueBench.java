@@ -67,13 +67,13 @@ QueueBench.oneThread:read1Thread   thrpt   45  44.507 ±  5.849  ops/us
 
 /* Seperated mask to both head and tail mask on different cache lines, variance and thrpt improved across most, so this seems much better
 * Benchmark                           Mode  Cnt   Score   Error   Units
-QueueBench.oneThread               thrpt   45  85.601 ± 6.710  ops/us
-QueueBench.oneThread:add1Thread    thrpt   45  39.065 ± 2.369  ops/us
-QueueBench.oneThread:offersFailed  thrpt   45   1.347 ± 0.725  ops/us
-QueueBench.oneThread:offersMade    thrpt   45  37.718 ± 2.668  ops/us
-QueueBench.oneThread:pollsFailed   thrpt   45   8.818 ± 3.603  ops/us
-QueueBench.oneThread:pollsMade     thrpt   45  37.718 ± 2.668  ops/us
-QueueBench.oneThread:read1Thread   thrpt   45  46.536 ± 5.059  ops/us
+QueueBench.oneThread               thrpt   45  82.119 ± 6.096  ops/us
+QueueBench.oneThread:add1Thread    thrpt   45  36.671 ± 3.522  ops/us
+QueueBench.oneThread:offersFailed  thrpt   45   0.481 ± 0.165  ops/us
+QueueBench.oneThread:offersMade    thrpt   45  36.191 ± 3.533  ops/us
+QueueBench.oneThread:pollsFailed   thrpt   45   9.256 ± 2.028  ops/us
+QueueBench.oneThread:pollsMade     thrpt   45  36.191 ± 3.533  ops/us
+QueueBench.oneThread:read1Thread   thrpt   45  45.447 ± 2.866  ops/us //Though the variance is tighter, bit masking has worse perf than if branch wrap around?
 *
 * */
 

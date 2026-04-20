@@ -1,4 +1,4 @@
-package io.github.kusoroadeolu;
+package io.github.kusoroadeolu.agen.jmh;
 
 import io.github.kusoroadeolu.mem.falsesharing.Accum;
 import io.github.kusoroadeolu.mem.falsesharing.Counter;
@@ -9,8 +9,6 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /*

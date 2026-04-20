@@ -1,4 +1,4 @@
-package io.github.kusoradeolu.agen.expr;
+package io.github.kusoradeolu.agen.expr.queues;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicReference;
 * *
 * Two invariants 1. No lost updates and 2. Reachability from head updates have been tested with JCStress
 * Built fully from scratch with inspo taken from JC Stress
+* At no point in time should the head be null
 * */
 public class MPMCQueue {
     private final AtomicReference<Node> head;
@@ -33,19 +34,19 @@ public class MPMCQueue {
     * If we reach a node who points to itself, we also restart from the head
     * */
     public boolean add(Object o){
-        Objects.requireNonNull(o);
-        Node node = new Node(o);
-
-            for (Node p = this.head.get();  ;){  //Backed by a volatile read
-                Node n = p.next();
-                if(n == null && p.casNext(null, node)){ //CAS'ing null to node is the linearizability point
+        Node node = new Node(Objects.requireNonNull(o));
+        Node h = this.head.get();
+        Node pred = h;
+            for (;  ;){  //Backed by a volatile read
+                Node p = pred.next();
+                if(p == null && pred.casNext(null, node)){ //CAS'ing null to node is the linearizability point
                     //We have enqueued as the tail
                     return true; //return
-                } else if(p == n) {
-                    //If the node points to itself, just restart from head
-                    p = this.head.get();
+                } else if(pred == p || p == null) {
+                    //If the node points to itself, or we reached the tailed and failed to CAS, just restart from head
+                    pred = h;
                 }else {
-                    p = n;
+                    pred = p;
                 }
             }
     }
@@ -61,25 +62,29 @@ public class MPMCQueue {
      * */
     public boolean remove(Object o){
         if (o == null) return false;
+        Node h = this.head.get();
 
         outer: for (;;){
             Node pred = null; //Node before p
-            Node p = this.head.get(); //Current node
+            Node p = h; //Current node, head is always a sentinel, so it will never change, saves us volatile reads
             Node n = p.next();
-
             for (; ; pred = p, p = n, n = p.next()){  //No NPE with pred can occur since the head is always sentineled
                 Object c = p.object();
                 if(c != null && Objects.equals(o, c) && p.casObject(c, null)){
                     //If n is not a dead node, we walk forward till we see a live node or reach the tail
-                    for (; ; n = p.next()){
+                    for (Node r = p ; ; r = n,  n = p.next()){
                         if (n == null || n.object() != null){ // if n is the tail or the next active node
-                            //If pred is dead or it has been unlinked, it means another node has linked itself to us
+                            //If pred is dead, or it has been unlinked, it means another node has probably linked itself to us
                             // So don't unlink our node, though we're dead
-                            if (pred.object() != null && pred.casNext(p, n)){ //if pred is still active
+                            if (pred.object() != null && pred.casNext(p, n)){ //if pred is still active or is still linked to p
                                 p.setNext(p); //Link to ourselves
                             }
 
                             return true;
+                        }
+
+                        if (r == n) {
+                            return true; //Just return
                         }
                     }
 
@@ -92,18 +97,70 @@ public class MPMCQueue {
         }
     }
 
+    /*
+    * To implement this, we read the "next" head node, since the head ideally can't be removed and is a dummy node
+     * If the head.next node is not a dead node, we read the value, we try cas its item as null,
+     *      if we succeed the item cas, we then try to CAS head.next from this node to the next alive node
+     *      else we reread head and retry
+     * else if the head.next node is a dead node, we iterate until we find the next live node, or we reach the tail
+     *      we then read the value of the node and try cas head.next to that node
+     *
+     * if we encounter a node that points to itself at any point in time here, we restart from head
+    * */
+    public Object poll(){
+        Node h = this.head.get();
+        Object o;
+        Node p = h.next(); //Here we initially start from the head's next
+        for (; p != null;){
+                Node q = p.next();
+                if ((o = p.object()) != null && p.casObject(o, null)){ //Linearizability point
+                    for (Node c = q, b = p;  ; b = c,  c = b.next()){
+                        if (c == null || c.object() != null){
+                            if(h.casNext(p, c)) {
+                                p.setNext(p);
+                            } //If we fail to cas next from p to o, that means p has been unattached by another node
+
+                            return o;
+                        }
+
+                        if (b == c) return o;
+                    }
+                }else if (p == q){
+                    p = h.next(); //H is always a sentinel so we can just reread its next value since thats the actual head
+                }else {
+                    p = q; //If p is a dead node just move forward
+                }
+
+        }
+
+        return null;
+    }
+
     public boolean contains(Object o){
         if (o == null) return false;
         Node h = this.head.get();
-        for ( ; ; ){
-            Node n = h.next();
-            if (n == null) return false;
-            else if (o.equals(n.object())){
+        for (Node p = h.next() ; p != null ; ){
+            Node q = p.next();
+            if (o.equals(p.object())){
                 return true;
-            }else if (h == n) {
-                h = this.head.get();
-            }else h = n;
+            }else if (q == p) {
+                p = h.next();
+            }else p = q;
         }
+
+        return false;
+    }
+
+    public boolean canReachTail(){
+        Node h = this.head.get();
+        for (Node p = h.next() ; p != null ; ){
+            Node q = p.next();
+            if (q == p) {
+                p = h.next();
+            }else p = q;
+        }
+
+        return true;
     }
 
     static class Node {
@@ -116,7 +173,7 @@ public class MPMCQueue {
         }
 
         public Node next(){
-            return next.get();
+            return next.getAcquire();
         }
 
         public boolean casNext(Node old, Node node){

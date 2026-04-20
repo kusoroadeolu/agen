@@ -57,3 +57,23 @@ To handle the case in which two caches can wait forever to ack each other's resp
 
 Core -> sends a load/store request to cache controller. How do we handle this.
 Cache controller polls for messages from the inter conn bus, relays those messages to the pd cache
+
+
+/*
+
+Hey, great work overall it fits in pretty well with the rest of the library. Just a few things I want to point out before we merge
+
+**DividerConfiguration**
+
+1. The `dividerColor(String)` overload is only grabbing `[0]` from `ParserUtils.getAnsiCodes()`, so anything after the first code gets silently dropped. Something like `"red, bold"` would lose the bold entirely. Other configuration classes handle this by using a full `AnsiCode[]` rather than just getting the first elem
+2. `MarkupParser` is missing from the builder. Per the spec it should be a required non-null field, and right now `Divider.get()` has `MarkupParser.DEFAULT` hardcoded so there’s no way to pass a custom parser through.
+3. No Javadoc on the record or builder. Every other config class has docs so this should match that standard before merging.
+
+**Divider**
+
+1. The Javadoc mentions the rendered string is cached after the first `get()` call and invalidated on `title()`, but there’s no actual caching implementation.
+2. `title.length()` doesn’t account for markup, something like `[red]Section Title` has a longer raw length than its visible length, so truncation kicks in too early. I usually use `MarkupParser.DEFAULT.originalString(String)` in other classes which strips both markup tags and  ansi to calculate the original string before any markup or ansi was applied.
+
+None of this is major, mostly just consistency and a couple of correctness gaps. Let me know if I need to explain anything better
+
+*/

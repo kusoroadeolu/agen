@@ -36,9 +36,9 @@ import java.util.Queue;
  *
  * */
 
-class SPSCQueuePad {
-    int head;
-    int head_mask;
+class SPSCConsumerPad {
+    int cIdx;
+    int c_mask;
     byte b000,b001,b002,b003,b004,b005,b006,b007;//  8b
     byte b010,b011,b012,b013,b014,b015,b016,b017;// 16b
     byte b020,b021,b022,b023,b024,b025,b026,b027;// 24b
@@ -47,16 +47,16 @@ class SPSCQueuePad {
     byte b050,b051,b052,b053,b054,b055,b056,b057;// 48b
     byte b060;
 
-    public SPSCQueuePad(int mask){
-        head_mask = mask;
+    public SPSCConsumerPad(int mask){
+        c_mask = mask;
     }
 
 }
 
 
-class SPSCQueuePadPad extends SPSCQueuePad {
-    int tail; //Head and tail are susceptible to false sharing
-    int tail_mask;
+class SPSCProducerPad extends SPSCConsumerPad {
+    int pIdx; //Head and tail are susceptible to false sharing
+    int p_mask;
     byte b000,b001,b002,b003,b004,b005,b006,b007;//  8b
     byte b010,b011,b012,b013,b014,b015,b016,b017;// 16b
     byte b020,b021,b022,b023,b024,b025,b026,b027;// 24b
@@ -65,13 +65,13 @@ class SPSCQueuePadPad extends SPSCQueuePad {
     byte b050,b051,b052,b053,b054,b055,b056,b057;// 48b
     byte b060;
 
-    public SPSCQueuePadPad(int mask) {
+    public SPSCProducerPad(int mask) {
         super(mask);
-        tail_mask = mask;
+        p_mask = mask;
     }
 }
 
-public class SPSCQueue<T> extends SPSCQueuePadPad implements Queue<T> {
+public class SPSCQueue<T> extends SPSCProducerPad implements Queue<T> {
     private final T[] items;
     private final int capacity;
 
@@ -91,17 +91,17 @@ public class SPSCQueue<T> extends SPSCQueuePadPad implements Queue<T> {
 
     public boolean add(T item){
         Objects.requireNonNull(item);
-        if (ITEMS.getAcquire(items, tail) != null) return false; //Do we really need get acquire memory ordering here?
-        ITEMS.setRelease(items, tail, item);
+        if (ITEMS.getAcquire(items, pIdx) != null) return false;
+        ITEMS.setRelease(items, pIdx, item); //A weaker set opaque ordering would be alright here
         maskTail();
         return true;
     }
 
-
+    @SuppressWarnings("unchecked")
     public T poll(){
-        T o = (T) ITEMS.getAcquire(items, head);
+        T o = (T) ITEMS.getAcquire(items, cIdx);
         if (o == null) return null;
-        ITEMS.setRelease(items, head, null);
+        ITEMS.setRelease(items, cIdx, null);
         maskHead();
         return o;
     }
@@ -197,10 +197,10 @@ public class SPSCQueue<T> extends SPSCQueuePadPad implements Queue<T> {
 
 
     public void maskHead(){
-        head = (head + 1) & head_mask;
+        cIdx = (cIdx + 1) & c_mask;
     }
 
     public void maskTail(){
-        tail = (tail + 1) & tail_mask;
+        pIdx = (pIdx + 1) & p_mask;
     }
 }

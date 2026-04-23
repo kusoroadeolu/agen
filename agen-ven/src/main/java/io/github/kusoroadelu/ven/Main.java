@@ -10,5 +10,6 @@ import java.nio.file.Path;
 
 public class Main {
     void main() throws IOException {
+        new JavaSyntaxHighlighter(new OneDarkTheme()).print(Path.of("C:\\Users\\eastw\\Git Projects\\Personal\\agen\\agen-expr\\src\\main\\java\\io\\github\\kusoradeolu\\agen\\expr\\queues\\MPMCQueue.java"));
     }
 }

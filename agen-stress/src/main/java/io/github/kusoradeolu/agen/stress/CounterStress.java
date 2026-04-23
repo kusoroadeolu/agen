@@ -3,6 +3,7 @@ package io.github.kusoradeolu.agen.stress;
 
 import io.github.kusoradeolu.agen.expr.counters.ApproximateCounter;
 import io.github.kusoradeolu.agen.expr.counters.SynchronizedCounter;
+import io.github.kusoradeolu.agen.expr.counters.ThreadLocalCounter;
 import org.openjdk.jcstress.annotations.*;
 import org.openjdk.jcstress.infra.results.I_Result;
 
@@ -16,7 +17,7 @@ public class CounterStress {
     @Outcome(id = "1", expect = Expect.ACCEPTABLE, desc = "Monotonic invariant maintained")
 
     public static class CounterMonoticSumInvariant {
-        private final ApproximateCounter counter = new SynchronizedCounter();
+        private final ApproximateCounter counter = new ThreadLocalCounter();
 
         @Actor
         public void add(){
@@ -38,7 +39,7 @@ public class CounterStress {
     @Outcome(id = "1", expect = Expect.ACCEPTABLE, desc = "Monotonic invariant maintained")
 
     public static class CounterIncrementInvariant {
-        private final ApproximateCounter counter = new SynchronizedCounter();
+        private final ApproximateCounter counter = new ThreadLocalCounter();
 
         @Actor
         public void add(){

@@ -38,7 +38,7 @@ public class MPMCQueue {
         Node h = this.head.get();
         Node pred = h;
             for (;  ;){  //Backed by a volatile read
-                Node p = pred.next();
+                Node p = pred.lvNext();
                 if(p == null && pred.casNext(null, node)){ //CAS'ing null to node is the linearizability point
                     //We have enqueued as the tail
                     return true; //return
@@ -67,17 +67,17 @@ public class MPMCQueue {
         outer: for (;;){
             Node pred = null; //Node before p
             Node p = h; //Current node, head is always a sentinel, so it will never change, saves us volatile reads
-            Node n = p.next();
-            for (; ; pred = p, p = n, n = p.next()){  //No NPE with pred can occur since the head is always sentineled
-                Object c = p.object();
+            Node n = p.lvNext();
+            for (; ; pred = p, p = n, n = p.lvNext()){  //No NPE with pred can occur since the head is always sentineled
+                Object c = p.lvObject();
                 if(c != null && Objects.equals(o, c) && p.casObject(c, null)){
                     //If n is not a dead node, we walk forward till we see a live node or reach the tail
-                    for (Node r = p ; ; r = n,  n = p.next()){
-                        if (n == null || n.object() != null){ // if n is the tail or the next active node
+                    for (Node r = p ; ; r = n,  n = p.lvNext()){
+                        if (n == null || n.lvObject() != null){ // if n is the tail or the next active node
                             //If pred is dead, or it has been unlinked, it means another node has probably linked itself to us
                             // So don't unlink our node, though we're dead
-                            if (pred.object() != null && pred.casNext(p, n)){ //if pred is still active or is still linked to p
-                                p.setNext(p); //Link to ourselves
+                            if (pred.lvObject() != null && pred.casNext(p, n)){ //if pred is still active or is still linked to p
+                                p.soNext(p); //Link to ourselves
                             }
 
                             return true;
@@ -110,14 +110,14 @@ public class MPMCQueue {
     public Object poll(){
         Node h = this.head.get();
         Object o;
-        Node p = h.next(); //Here we initially start from the head's next
+        Node p = h.lvNext(); //Here we initially start from the head's next
         for (; p != null;){
-                Node q = p.next();
-                if ((o = p.object()) != null && p.casObject(o, null)){ //Linearizability point
-                    for (Node c = q, b = p;  ; b = c,  c = b.next()){
-                        if (c == null || c.object() != null){
+                Node q = p.lvNext();
+                if ((o = p.lvObject()) != null && p.casObject(o, null)){ //Linearizability point
+                    for (Node c = q, b = p;  ; b = c,  c = b.lvNext()){
+                        if (c == null || c.lvObject() != null){
                             if(h.casNext(p, c)) {
-                                p.setNext(p);
+                                p.soNext(p);
                             } //If we fail to cas next from p to o, that means p has been unattached by another node
 
                             return o;
@@ -126,7 +126,7 @@ public class MPMCQueue {
                         if (b == c) return o;
                     }
                 }else if (p == q){
-                    p = h.next(); //H is always a sentinel so we can just reread its next value since thats the actual head
+                    p = h.lvNext(); //H is always a sentinel so we can just reread its next value since thats the actual head
                 }else {
                     p = q; //If p is a dead node just move forward
                 }
@@ -139,12 +139,12 @@ public class MPMCQueue {
     public boolean contains(Object o){
         if (o == null) return false;
         Node h = this.head.get();
-        for (Node p = h.next() ; p != null ; ){
-            Node q = p.next();
-            if (o.equals(p.object())){
+        for (Node p = h.lvNext(); p != null ; ){
+            Node q = p.lvNext();
+            if (o.equals(p.lvObject())){
                 return true;
             }else if (q == p) {
-                p = h.next();
+                p = h.lvNext();
             }else p = q;
         }
 
@@ -153,10 +153,10 @@ public class MPMCQueue {
 
     public boolean canReachTail(){
         Node h = this.head.get();
-        for (Node p = h.next() ; p != null ; ){
-            Node q = p.next();
+        for (Node p = h.lvNext(); p != null ; ){
+            Node q = p.lvNext();
             if (q == p) {
-                p = h.next();
+                p = h.lvNext();
             }else p = q;
         }
 
@@ -172,7 +172,7 @@ public class MPMCQueue {
             this.next = new AtomicReference<>();
         }
 
-        public Node next(){
+        public Node lvNext(){
             return next.getAcquire();
         }
 
@@ -180,7 +180,7 @@ public class MPMCQueue {
             return next.compareAndSet(old, node);
         }
 
-        public void setNext(Node next){
+        public void soNext(Node next){
             this.next.setRelease(next);
         }
 
@@ -188,8 +188,8 @@ public class MPMCQueue {
             return o.compareAndSet(old, obj);
         }
 
-        public Object object(){
-            return o.get();
+        public Object lvObject(){
+            return o.getAcquire();
         }
     }
 }

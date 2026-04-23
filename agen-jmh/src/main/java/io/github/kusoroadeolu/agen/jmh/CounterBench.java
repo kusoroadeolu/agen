@@ -14,6 +14,37 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+/*
+* Benchmark                                (counterType)   Mode  Cnt     Score     Error   Units
+CounterBench.eightThreads                         sync  thrpt   35  1266.608 ± 520.763  ops/us
+CounterBench.eightThreads:add_8Threads            sync  thrpt   35   358.721 ± 432.198  ops/us
+CounterBench.eightThreads:read_8Threads           sync  thrpt   35   907.887 ±  97.212  ops/us
+CounterBench.eightThreads                     diminish  thrpt   35  1876.948 ± 800.931  ops/us
+CounterBench.eightThreads:add_8Threads        diminish  thrpt   35  1044.361 ± 525.641  ops/us
+CounterBench.eightThreads:read_8Threads       diminish  thrpt   35   832.587 ± 280.047  ops/us
+CounterBench.eightThreads                       tlocal  thrpt   35  1121.424 ± 539.821  ops/us
+CounterBench.eightThreads:add_8Threads          tlocal  thrpt   35  1043.083 ± 515.327  ops/us
+CounterBench.eightThreads:read_8Threads         tlocal  thrpt   35    78.342 ±  25.047  ops/us
+CounterBench.fourThreads                          sync  thrpt   35  1055.854 ± 596.295  ops/us
+CounterBench.fourThreads:add_4Threads             sync  thrpt   35   360.597 ± 435.492  ops/us
+CounterBench.fourThreads:read_4Threads            sync  thrpt   35   695.257 ± 161.242  ops/us
+CounterBench.fourThreads                      diminish  thrpt   35   746.049 ± 696.561  ops/us
+CounterBench.fourThreads:add_4Threads         diminish  thrpt   35   357.307 ± 438.114  ops/us
+CounterBench.fourThreads:read_4Threads        diminish  thrpt   35   388.743 ± 263.619  ops/us
+CounterBench.fourThreads                        tlocal  thrpt   35   386.647 ± 438.252  ops/us
+CounterBench.fourThreads:add_4Threads           tlocal  thrpt   35   357.087 ± 414.054  ops/us
+CounterBench.fourThreads:read_4Threads          tlocal  thrpt   35    29.560 ±  24.219  ops/us
+CounterBench.twoThreads                           sync  thrpt   35  1091.835 ± 534.731  ops/us
+CounterBench.twoThreads:add2Threads               sync  thrpt   35   456.928 ± 340.770  ops/us
+CounterBench.twoThreads:read2Threads              sync  thrpt   35   634.908 ± 200.738  ops/us
+CounterBench.twoThreads                       diminish  thrpt   35   901.151 ± 607.584  ops/us
+CounterBench.twoThreads:add2Threads           diminish  thrpt   35   449.534 ± 338.801  ops/us
+CounterBench.twoThreads:read2Threads          diminish  thrpt   35   451.617 ± 271.690  ops/us
+CounterBench.twoThreads                         tlocal  thrpt   35    25.438 ±   0.679  ops/us
+CounterBench.twoThreads:add2Threads             tlocal  thrpt   35    17.047 ±   0.392  ops/us
+CounterBench.twoThreads:read2Threads            tlocal  thrpt   35     8.391 ±   0.446  ops/us
+*
+* */
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
 @State(Scope.Group)

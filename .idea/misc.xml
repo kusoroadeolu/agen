@@ -11,6 +11,7 @@
       <set>
         <option value="$PROJECT_DIR$/agen-adders/pom.xml" />
         <option value="$PROJECT_DIR$/agen-stm/pom.xml" />
+        <option value="$PROJECT_DIR$/agen-stress/pom.xml" />
       </set>
     </option>
   </component>

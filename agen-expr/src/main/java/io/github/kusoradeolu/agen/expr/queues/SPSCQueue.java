@@ -36,45 +36,72 @@ import java.util.Queue;
  *
  * */
 
-class SPSCConsumerPad {
+class SPSCLConsumerPad {
+
+    byte b000,b001,b002,b003,b004,b005,b006,b007;//  8b
+    byte b010,b011,b012,b013,b014,b015,b016,b017;// 16b
+    byte b020,b021,b022,b023,b024,b025,b026,b027;// 24b
+    byte b030,b031,b032,b033,b034,b035,b036,b037;// 32b
+    byte b040,b041,b042,b043,b044,b045,b046,b047;// 40b
+    byte b050,b051,b052,b053,b054,b055,b056,b057;// 48b
+    byte b060, b061, b062, b063;
+
+
+}
+
+class SPSCConsumerFields extends SPSCLConsumerPad {
     int cIdx;
-    int c_mask;
+    final int cMask;
+
+    SPSCConsumerFields(int cMask) {
+        this.cMask = cMask;
+    }
+}
+
+
+class SPSCRConsumerPad extends SPSCConsumerFields{
+
     byte b000,b001,b002,b003,b004,b005,b006,b007;//  8b
     byte b010,b011,b012,b013,b014,b015,b016,b017;// 16b
     byte b020,b021,b022,b023,b024,b025,b026,b027;// 24b
     byte b030,b031,b032,b033,b034,b035,b036,b037;// 32b
     byte b040,b041,b042,b043,b044,b045,b046,b047;// 40b
     byte b050,b051,b052,b053,b054,b055,b056,b057;// 48b
-    byte b060;
+    byte b060, b061, b062, b063;
 
-    public SPSCConsumerPad(int mask){
-        c_mask = mask;
+    SPSCRConsumerPad(int cMask) {
+        super(cMask);
     }
-
 }
 
 
-class SPSCProducerPad extends SPSCConsumerPad {
+class SPSCProducerFields extends SPSCRConsumerPad {
     int pIdx; //Head and tail are susceptible to false sharing
-    int p_mask;
+    final int pMask;
+
+    SPSCProducerFields(int cMask) {
+        super(cMask);
+        pMask = cMask;
+    }
+}
+
+class SPSCProducerRPad extends SPSCProducerFields {
     byte b000,b001,b002,b003,b004,b005,b006,b007;//  8b
     byte b010,b011,b012,b013,b014,b015,b016,b017;// 16b
     byte b020,b021,b022,b023,b024,b025,b026,b027;// 24b
     byte b030,b031,b032,b033,b034,b035,b036,b037;// 32b
     byte b040,b041,b042,b043,b044,b045,b046,b047;// 40b
     byte b050,b051,b052,b053,b054,b055,b056,b057;// 48b
-    byte b060;
+    byte b060, b061, b062, b063;
 
-    public SPSCProducerPad(int mask) {
-        super(mask);
-        p_mask = mask;
+    SPSCProducerRPad(int cMask) {
+        super(cMask);
     }
 }
 
-public class SPSCQueue<T> extends SPSCProducerPad implements Queue<T> {
+public class SPSCQueue<T> extends SPSCProducerRPad implements Queue<T> {
     private final T[] items;
     private final int capacity;
-
     private static final VarHandle ITEMS;
 
     static {
@@ -83,26 +110,37 @@ public class SPSCQueue<T> extends SPSCProducerPad implements Queue<T> {
 
     @SuppressWarnings("unchecked")
     public SPSCQueue(int capacity) {
+
         int toPowTwo = 1 << (32 - Integer.numberOfLeadingZeros(capacity - 1));
         this.capacity = toPowTwo;
         super(toPowTwo - 1);
         this.items = (T[]) new Object[toPowTwo];
     }
 
+
     public boolean add(T item){
         Objects.requireNonNull(item);
-        if (ITEMS.getAcquire(items, pIdx) != null) return false;
-        ITEMS.setRelease(items, pIdx, item); //A weaker set opaque ordering would be alright here
+        var i = items;
+        boolean consumed = ITEMS.getAcquire(i, pIdx) == null; //If an optimizing compiler can prove this is always null, it can eliminate this access completely
+
+        if (!consumed) return false;
+
+        ITEMS.setRelease(i, pIdx, item);
         maskTail();
         return true;
     }
 
+
+
     @SuppressWarnings("unchecked")
     public T poll(){
-        T o = (T) ITEMS.getAcquire(items, cIdx);
+        var i = items;
+        T o = (T) ITEMS.getAcquire(i, cIdx); //can't get reordered downwards
+
         if (o == null) return null;
-        ITEMS.setRelease(items, cIdx, null);
-        maskHead();
+
+        ITEMS.setRelease(i, cIdx, null); //can't be reordered upwards
+        maskHead(); //can't be reordered downwards as that breaks commutativity
         return o;
     }
 
@@ -197,10 +235,10 @@ public class SPSCQueue<T> extends SPSCProducerPad implements Queue<T> {
 
 
     public void maskHead(){
-        cIdx = (cIdx + 1) & c_mask;
+        cIdx = (cIdx + 1) & cMask;
     }
 
     public void maskTail(){
-        pIdx = (pIdx + 1) & p_mask;
+        pIdx = (pIdx + 1) & pMask;
     }
 }

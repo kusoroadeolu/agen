@@ -35,7 +35,7 @@ public class MPMCQueue {
     * */
     public boolean add(Object o){
         Node node = new Node(Objects.requireNonNull(o));
-        Node h = this.head.get();
+        Node h = head.get();
         Node pred = h;
             for (;  ;){  //Backed by a volatile read
                 Node p = pred.lvNext();
@@ -116,6 +116,7 @@ public class MPMCQueue {
                 if ((o = p.lvObject()) != null && p.casObject(o, null)){ //Linearizability point
                     for (Node c = q, b = p;  ; b = c,  c = b.lvNext()){
                         if (c == null || c.lvObject() != null){
+
                             if(h.casNext(p, c)) {
                                 p.soNext(p);
                             } //If we fail to cas next from p to o, that means p has been unattached by another node

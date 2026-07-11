@@ -33,8 +33,7 @@ import java.util.function.Consumer;
 *
 *
 * Invariants:
-* A thread must not submit a null request
-* Both sequencers must be monotonically increasing
+* Both sequencers are monotonically increasing
 * The combining thread must always null the shared request field before incrementing the pubSequence
 * A combining thread cannot combine more than x requests at a time
 * A non combiner cannot acquire the lock if its sequence number does not equal the current pub sequence number
@@ -177,7 +176,6 @@ public class SequencerFlatCombiner<E> {
                     local.apply(e);
                     combineCount++;
                 }
-                System.out.println("Combine count: " + combineCount);
 
                 lock.release();
                 return null;

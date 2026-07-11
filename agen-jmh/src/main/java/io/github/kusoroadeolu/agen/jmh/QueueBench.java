@@ -86,14 +86,19 @@ QueueBench.oneThread:pollsMade     thrpt   45  33.430 ± 3.587  ops/us
 QueueBench.oneThread:read1Thread   thrpt   45  42.702 ± 3.433  ops/us
 * */
 
-
-
+//Handled false sharing properly
+/*
+* Benchmark                     Mode  Cnt    Score    Error   Units
+QueueBench.oneThread         thrpt   30  363.258 ± 10.858  ops/us
+QueueBench.oneThread:reader  thrpt   30  183.071 ±  5.375  ops/us
+QueueBench.oneThread:writer  thrpt   30  180.187 ±  5.502  ops/us
+* */
 
 
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
-@Warmup(iterations = 10, time = 2)
-@Measurement(iterations = 15, time = 2)
+@Warmup(iterations = 10, time = 1)
+@Measurement(iterations = 10, time = 1)
 @Fork(3)
 @State(Scope.Group)
 public class QueueBench {
@@ -104,42 +109,21 @@ public class QueueBench {
 
     @Setup
     public void setup(){
-        queue = new SPSCQueue<>(4096);
-    }
-
-    @AuxCounters
-    @State(Scope.Thread)
-    public static class PollCounters {
-        public long pollsFailed;
-        public long pollsMade;
-    }
-
-    @AuxCounters
-    @State(Scope.Thread)
-    public static class OfferCounters {
-        public long offersFailed;
-        public long offersMade;
+        queue = new SPSCQueue<>(1 << 16);
     }
 
     @GroupThreads
     @Group("oneThread")
     @Benchmark
-    public void add1Thread(Blackhole bh, OfferCounters counter){
-        boolean off = queue.offer(ITEM);
-        if (off) counter.offersMade++;
-        else counter.offersFailed++;
-
-        bh.consume(off);
+    public void writer(Blackhole bh){
+        bh.consume(queue.offer(ITEM));
     }
 
     @GroupThreads
     @Group("oneThread")
     @Benchmark
-    public void read1Thread(Blackhole bh, PollCounters counter){
-        Integer i = queue.poll();
-        if (i == null) counter.pollsFailed++;
-        else counter.pollsMade++;
-        bh.consume(i);
+    public void reader(Blackhole bh){
+        bh.consume(queue.poll());
     }
 
 

@@ -1,4 +1,4 @@
-``# Chapter 1
+# Chapter 1
 ## Memory consistency
 Memory consistency is a precise spec that defines shared memory correctness. 
 The authors talk about consistency models as how loads and stores (reads and writes) interact on shared memory. They then emphasize the difficulty of defining memory consistency, in terms of shared memory correctness, because of the nature of shared memory. It does this by comparing shared memory to a single processor core.
@@ -9,7 +9,7 @@ The burden of implementing the desired consistency level falls to the hardware l
 ### Coherence
 The authors describe incoherence, rather than coherence, as a processor's cache being out of date when another processor modifies it's cache. The authors then emphasize that the goal of cache coherence in shared memory systems, is to make them functionally invisible(i.e. you never have to think about if a cache at any point in time is valid/invalid). Multicore systems maintain coherence through a coherence protocol. 
 
-A memory consistency model determines if a read (by a reader process/threads) of a write (by a writer process/thread is valid), even if the writer process/thread executed the writes in the correct order. In short, it determines, if that behaviour is correct or incorrect
+A memory consistency model determines if a read (by a reader process/threads) of a write (by a writer process/thread) is valid. In short, it determines, if the write/read ordering of multiple actors on shared memory is correct
 
 
 # Chapter 2

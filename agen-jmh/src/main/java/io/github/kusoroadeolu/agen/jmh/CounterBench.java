@@ -15,34 +15,34 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /*
-* Benchmark                                (counterType)   Mode  Cnt     Score     Error   Units
-CounterBench.eightThreads                         sync  thrpt   35  1266.608 ± 520.763  ops/us
-CounterBench.eightThreads:add_8Threads            sync  thrpt   35   358.721 ± 432.198  ops/us
-CounterBench.eightThreads:read_8Threads           sync  thrpt   35   907.887 ±  97.212  ops/us
-CounterBench.eightThreads                     diminish  thrpt   35  1876.948 ± 800.931  ops/us
-CounterBench.eightThreads:add_8Threads        diminish  thrpt   35  1044.361 ± 525.641  ops/us
-CounterBench.eightThreads:read_8Threads       diminish  thrpt   35   832.587 ± 280.047  ops/us
-CounterBench.eightThreads                       tlocal  thrpt   35  1121.424 ± 539.821  ops/us
-CounterBench.eightThreads:add_8Threads          tlocal  thrpt   35  1043.083 ± 515.327  ops/us
-CounterBench.eightThreads:read_8Threads         tlocal  thrpt   35    78.342 ±  25.047  ops/us
-CounterBench.fourThreads                          sync  thrpt   35  1055.854 ± 596.295  ops/us
-CounterBench.fourThreads:add_4Threads             sync  thrpt   35   360.597 ± 435.492  ops/us
-CounterBench.fourThreads:read_4Threads            sync  thrpt   35   695.257 ± 161.242  ops/us
-CounterBench.fourThreads                      diminish  thrpt   35   746.049 ± 696.561  ops/us
-CounterBench.fourThreads:add_4Threads         diminish  thrpt   35   357.307 ± 438.114  ops/us
-CounterBench.fourThreads:read_4Threads        diminish  thrpt   35   388.743 ± 263.619  ops/us
-CounterBench.fourThreads                        tlocal  thrpt   35   386.647 ± 438.252  ops/us
-CounterBench.fourThreads:add_4Threads           tlocal  thrpt   35   357.087 ± 414.054  ops/us
-CounterBench.fourThreads:read_4Threads          tlocal  thrpt   35    29.560 ±  24.219  ops/us
-CounterBench.twoThreads                           sync  thrpt   35  1091.835 ± 534.731  ops/us
-CounterBench.twoThreads:add2Threads               sync  thrpt   35   456.928 ± 340.770  ops/us
-CounterBench.twoThreads:read2Threads              sync  thrpt   35   634.908 ± 200.738  ops/us
-CounterBench.twoThreads                       diminish  thrpt   35   901.151 ± 607.584  ops/us
-CounterBench.twoThreads:add2Threads           diminish  thrpt   35   449.534 ± 338.801  ops/us
-CounterBench.twoThreads:read2Threads          diminish  thrpt   35   451.617 ± 271.690  ops/us
-CounterBench.twoThreads                         tlocal  thrpt   35    25.438 ±   0.679  ops/us
-CounterBench.twoThreads:add2Threads             tlocal  thrpt   35    17.047 ±   0.392  ops/us
-CounterBench.twoThreads:read2Threads            tlocal  thrpt   35     8.391 ±   0.446  ops/us
+Benchmark                                (counterType)   Mode  Cnt     Score     Error   Units
+CounterBench.eightThreads                         sync  thrpt   75   880.309 ±  17.947  ops/us
+CounterBench.eightThreads:add_8Threads            sync  thrpt   75     9.030 ±   0.353  ops/us
+CounterBench.eightThreads:read_8Threads           sync  thrpt   75   871.279 ±  17.879  ops/us
+CounterBench.eightThreads                     diminish  thrpt   74  1875.779 ± 566.177  ops/us
+CounterBench.eightThreads:add_8Threads        diminish  thrpt   74  1086.268 ± 350.281  ops/us
+CounterBench.eightThreads:read_8Threads       diminish  thrpt   74   789.511 ± 221.251  ops/us
+CounterBench.eightThreads                       tlocal  thrpt   75   775.710 ± 360.378  ops/us
+CounterBench.eightThreads:add_8Threads          tlocal  thrpt   75   723.930 ± 340.388  ops/us
+CounterBench.eightThreads:read_8Threads         tlocal  thrpt   75    51.780 ±  20.015  ops/us
+CounterBench.fourThreads                          sync  thrpt   75  2581.215 ± 372.951  ops/us
+CounterBench.fourThreads:add_4Threads             sync  thrpt   75  1448.895 ± 287.283  ops/us
+CounterBench.fourThreads:read_4Threads            sync  thrpt   75  1132.320 ±  85.988  ops/us
+CounterBench.fourThreads                      diminish  thrpt   75   922.032 ± 439.219  ops/us
+CounterBench.fourThreads:add_4Threads         diminish  thrpt   75   370.338 ± 292.086  ops/us
+CounterBench.fourThreads:read_4Threads        diminish  thrpt   75   551.694 ± 158.211  ops/us
+CounterBench.fourThreads                        tlocal  thrpt   75   783.016 ± 366.840  ops/us
+CounterBench.fourThreads:add_4Threads           tlocal  thrpt   75   731.479 ± 346.397  ops/us
+CounterBench.fourThreads:read_4Threads          tlocal  thrpt   75    51.537 ±  20.467  ops/us
+CounterBench.twoThreads                           sync  thrpt   75  2350.921 ± 421.599  ops/us
+CounterBench.twoThreads:add2Threads               sync  thrpt   75  1215.274 ± 263.443  ops/us
+CounterBench.twoThreads:read2Threads              sync  thrpt   75  1135.647 ± 160.356  ops/us
+CounterBench.twoThreads                       diminish  thrpt   75   724.157 ± 511.009  ops/us
+CounterBench.twoThreads:add2Threads           diminish  thrpt   75   356.562 ± 282.240  ops/us
+CounterBench.twoThreads:read2Threads          diminish  thrpt   75   367.595 ± 229.679  ops/us
+CounterBench.twoThreads                         tlocal  thrpt   75  1097.987 ± 347.987  ops/us
+CounterBench.twoThreads:add2Threads             tlocal  thrpt   75  1022.176 ± 326.265  ops/us
+CounterBench.twoThreads:read2Threads            tlocal  thrpt   75    75.811 ±  21.726  ops/us
 *
 * */
 @BenchmarkMode(Mode.Throughput)
@@ -50,8 +50,9 @@ CounterBench.twoThreads:read2Threads            tlocal  thrpt   35     8.391 ± 
 @State(Scope.Group)
 @Warmup(iterations = 10, time = 1)
 @Measurement(iterations = 7, time = 1)
+@Fork(3)
 public class CounterBench {
-    @Param({"sync", "diminish", "tlocal"})
+    @Param({"tlocal"})
     private String counterType;
 
     private ApproximateCounter counter;
@@ -122,6 +123,7 @@ public class CounterBench {
         void main() throws Exception {
             Options opt = new OptionsBuilder()
                     .include(CounterBench.class.getSimpleName())
+                    .addProfiler("jfr", "dir=C:\\jfr-counter-output")
                     .build();
             new Runner(opt).run();
         }
